@@ -1,0 +1,21 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Heart Disease Classification"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Analysis
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: true
+
+execute:
+  echo: true
+  warning: false
+  message: false

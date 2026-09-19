@@ -1,0 +1,23 @@
+---
+title: "Heart Disease Classification"
+subtitle: "Development and internal validation of a clinical classification model"
+author: "Jade"
+---
+
+## Project overview
+
+This project develops and internally validates a classification model for identifying the presence of heart disease using routinely collected demographic, clinical, and exercise-related variables.
+
+The analysis is conducted in R and reported using Quarto to ensure that the complete workflow is transparent and reproducible.
+
+## Reproducibility check
+
+The following code records the R version used to render this report.
+
+```{r}
+#| label: reproducibility-check
+
+set.seed(20260919)
+
+R.version.string
+```
