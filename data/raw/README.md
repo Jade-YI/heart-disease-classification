@@ -2,56 +2,34 @@
 
 ## Dataset
 
-**Dataset name:** Heart Failure Prediction Dataset  
-**File name:** `heart.csv`  
-**Curator:** Federico Soriano  
-**Source:** <https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction>  
-**Date accessed:** 2026-09-19
+**Dataset name:** Stroke Prediction Dataset  
+**File:** `healthcare-dataset-stroke-data.csv`  
+**Source:** <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>  
+**Date accessed:** 2026-09-20
 
-## Important outcome definition
+The dataset contains 5,110 observations and 12 variables describing
+demographic, clinical, and lifestyle characteristics together with
+recorded stroke status.
 
-Despite the name of the Kaggle dataset, the outcome variable
-`HeartDisease` represents the presence or absence of heart disease.
+Each row represents one individual. The variable `stroke` is coded as:
 
-It does not represent:
-
-- incident heart failure during follow-up;
-- heart-failure mortality;
-- time-to-event data;
-- treatment effectiveness or safety.
-
-This project is therefore framed as a cross-sectional clinical
-classification study rather than a heart-failure prediction study.
-
-## Data provenance
-
-The Kaggle dataset combines observations from five pre-existing heart
-disease datasets:
-
-- Cleveland;
-- Hungarian;
-- Switzerland;
-- Long Beach VA;
-- Statlog Heart.
-
-The combined dataset contains 918 observations and 11 candidate
-predictors, plus the binary outcome `HeartDisease`.
-
-Several component datasets originate from the UCI Heart Disease
-collection:
-
-<https://archive.ics.uci.edu/dataset/45/heart+disease>
-
-Original UCI citation:
-
-> Janosi, A., Steinbrunn, W., Pfisterer, M., & Detrano, R. (1989).
-> Heart Disease [Dataset]. UCI Machine Learning Repository.
-> <https://doi.org/10.24432/C52P4X>
+- `0`: no recorded stroke;
+- `1`: recorded stroke.
 
 ## Raw-data policy
 
-The file stored in this directory is treated as immutable raw data.
+The CSV file in this directory is preserved in its original downloaded
+form and must not be edited manually.
 
-It must not be edited manually. All cleaning, recoding, exclusion, and
-imputation decisions will be implemented in R code so that the analysis
-can be reproduced from the original file.
+All variable renaming, recoding, missing-value handling, exclusions,
+and derived variables will be implemented in R code. Cleaned datasets
+will be written to `data/processed/`.
+
+## Important limitations
+
+The dataset does not provide information about the sampling frame,
+recruitment dates, stroke dates, follow-up time, or the timing of
+clinical measurements relative to stroke.
+
+It should therefore be used for data-quality assessment and descriptive
+analysis, not for estimating stroke incidence or causal effects.

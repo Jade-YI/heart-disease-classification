@@ -1,2 +1,176 @@
-# heart-disease-classification
-A reproducible clinical classification project using R and Quarto.
+# Stroke Data Cleaning and Descriptive Analysis
+
+A reproducible R and Quarto project examining data quality, missingness, and demographic and clinical characteristics by stroke status.
+
+**Project website:**
+https://jade-yi.github.io/stroke-data-cleaning-analysis/
+
+## Project overview
+
+This project demonstrates a transparent workflow for cleaning and analysing a publicly available stroke dataset.
+
+The analysis focuses on:
+
+* assessing data structure and variable types;
+* identifying explicit and implicit missing values;
+* checking duplicate records and inconsistent values;
+* reviewing numerical ranges and potential outliers;
+* documenting all cleaning and recoding decisions;
+* describing the study population by stroke status;
+* examining how crude patterns change after age stratification.
+
+The project does not aim to build a machine-learning prediction model or estimate causal effects.
+
+## Research objective
+
+The primary objective is to answer the following question:
+
+> What demographic, clinical, and lifestyle characteristics distinguish participants with and without stroke in this dataset?
+
+A secondary objective is to investigate whether crude differences may be explained partly by age, an important potential confounder in the relationships between stroke status and several other characteristics.
+
+## Data source
+
+The analysis uses the **Stroke Prediction Dataset** published on Kaggle:
+
+https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset
+
+The raw data file is:
+
+```text
+healthcare-dataset-stroke-data.csv
+```
+
+It contains 5,110 observations and the following variables:
+
+* `id`
+* `gender`
+* `age`
+* `hypertension`
+* `heart_disease`
+* `ever_married`
+* `work_type`
+* `Residence_type`
+* `avg_glucose_level`
+* `bmi`
+* `smoking_status`
+* `stroke`
+
+Each row represents one individual. The binary variable `stroke` indicates whether the individual is recorded as having experienced a stroke.
+
+The original CSV file is preserved unchanged in `data/raw/`. All cleaning and transformations are performed in R.
+
+## Planned analysis
+
+The project is organised into the following stages:
+
+1. Import and structural validation
+2. Duplicate and identifier checks
+3. Variable-name and data-type standardisation
+4. Missing-data assessment
+5. Review of categorical values
+6. Review of numerical ranges and potential outliers
+7. Creation of a cleaned analytical dataset
+8. Description of the overall study population
+9. Comparison by stroke status
+10. Age-stratified descriptive analysis
+11. Discussion of limitations and interpretability
+
+Continuous variables will generally be summarised using the median and interquartile range when their distributions are asymmetric. Categorical variables will be reported using counts and percentages. Valid denominators will be shown when values are missing.
+
+## Important data-quality considerations
+
+Initial inspection identified several issues that require explicit handling:
+
+* BMI contains missing values.
+* `smoking_status` includes an `Unknown` category that is not encoded as `NA`.
+* The `Unknown` smoking category is strongly related to age and should not automatically be removed or replaced.
+* One observation uses the gender category `Other`, making group-specific analysis for this category unreliable.
+* Some BMI and glucose values are extreme and require review, but extreme values will not be deleted without a documented justification.
+* Age includes decimal values for young children, which should not automatically be treated as errors.
+* The dataset contains both children and adults, so several variables must be interpreted in relation to age.
+
+Raw values will never be overwritten. Cleaning decisions will be implemented programmatically and documented in the report.
+
+## Interpretation boundaries
+
+This dataset does not provide information on:
+
+* the sampling frame or target population;
+* recruitment dates;
+* the date or type of stroke;
+* whether the stroke was a first event;
+* follow-up duration;
+* when predictors were measured relative to the stroke;
+* treatment exposure or treatment outcomes.
+
+Consequently, the analysis cannot estimate stroke incidence, predict future stroke risk, establish temporality, or support causal conclusions. Reported percentages describe this dataset only and should not be interpreted as population prevalence estimates.
+
+## Project structure
+
+```text
+stroke-data-cleaning-analysis/
+├── data/
+│   ├── raw/
+│   │   ├── README.md
+│   │   └── healthcare-dataset-stroke-data.csv
+│   └── processed/
+├── R/
+├── figures/
+├── docs/
+├── index.qmd
+├── _quarto.yml
+├── renv.lock
+├── stroke-data-cleaning-analysis.Rproj
+└── README.md
+```
+
+* `data/raw/` contains the unchanged source data and provenance documentation.
+* `data/processed/` contains datasets generated by the cleaning code.
+* `R/` contains reusable data-processing and analysis scripts.
+* `figures/` contains figures saved outside the rendered report when required.
+* `index.qmd` contains the main reproducible analysis.
+* `docs/` contains the rendered GitHub Pages website.
+* `renv.lock` records the R package environment.
+
+## Reproducibility
+
+The project uses `renv` to record package versions and Quarto to generate the final report.
+
+To reproduce the analysis:
+
+```bash
+git clone git@github.com:Jade-YI/stroke-data-cleaning-analysis.git
+cd stroke-data-cleaning-analysis
+```
+
+Open `stroke-data-cleaning-analysis.Rproj` in RStudio and restore the package environment:
+
+```r
+renv::restore()
+```
+
+Render the Quarto website:
+
+```bash
+quarto render
+```
+
+The generated website will be written to the `docs/` directory.
+
+## Tools
+
+* R
+* Quarto
+* Git and GitHub
+* `renv`
+
+Additional R packages will be documented in `renv.lock` as the analysis develops.
+
+## Status
+
+This project is currently in development.
+
+## Author
+
+Jade Yi

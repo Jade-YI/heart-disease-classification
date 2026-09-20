@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website:
-  title: "Heart Disease Classification"
+  title: "Stroke Data Analysis"
   navbar:
     left:
       - href: index.qmd

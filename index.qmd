@@ -1,14 +1,19 @@
 ---
-title: "Heart Disease Classification"
-subtitle: "Development and internal validation of a clinical classification model"
+title: "Stroke Data Cleaning and Descriptive Analysis"
+subtitle: "A reproducible analysis of demographic and clinical characteristics by stroke status"
 author: "Jade"
 ---
 
 ## Project overview
 
-This project develops and internally validates a classification model for identifying the presence of heart disease using routinely collected demographic, clinical, and exercise-related variables.
+This project presents a reproducible data quality assessment, cleaning
+workflow, and descriptive analysis of demographic, clinical, and
+lifestyle characteristics by stroke status.
 
-The analysis is conducted in R and reported using Quarto to ensure that the complete workflow is transparent and reproducible.
+The project focuses on transparent data cleaning, missing-data
+assessment, descriptive statistics, and age-stratified comparisons.
+It does not aim to develop a machine-learning prediction model or
+estimate causal effects.
 
 ## Reproducibility check
 

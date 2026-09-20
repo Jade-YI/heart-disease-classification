@@ -2,21 +2,21 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Heart Disease Classification",
+    "title": "Stroke Data Cleaning and Descriptive Analysis",
     "section": "",
-    "text": "This project develops and internally validates a classification model for identifying the presence of heart disease using routinely collected demographic, clinical, and exercise-related variables.\nThe analysis is conducted in R and reported using Quarto to ensure that the complete workflow is transparent and reproducible."
+    "text": "This project presents a reproducible data quality assessment, cleaning workflow, and descriptive analysis of demographic, clinical, and lifestyle characteristics by stroke status.\nThe project focuses on transparent data cleaning, missing-data assessment, descriptive statistics, and age-stratified comparisons. It does not aim to develop a machine-learning prediction model or estimate causal effects."
   },
   {
     "objectID": "index.html#project-overview",
     "href": "index.html#project-overview",
-    "title": "Heart Disease Classification",
+    "title": "Stroke Data Cleaning and Descriptive Analysis",
     "section": "",
-    "text": "This project develops and internally validates a classification model for identifying the presence of heart disease using routinely collected demographic, clinical, and exercise-related variables.\nThe analysis is conducted in R and reported using Quarto to ensure that the complete workflow is transparent and reproducible."
+    "text": "This project presents a reproducible data quality assessment, cleaning workflow, and descriptive analysis of demographic, clinical, and lifestyle characteristics by stroke status.\nThe project focuses on transparent data cleaning, missing-data assessment, descriptive statistics, and age-stratified comparisons. It does not aim to develop a machine-learning prediction model or estimate causal effects."
   },
   {
     "objectID": "index.html#reproducibility-check",
     "href": "index.html#reproducibility-check",
-    "title": "Heart Disease Classification",
+    "title": "Stroke Data Cleaning and Descriptive Analysis",
     "section": "Reproducibility check",
     "text": "Reproducibility check\nThe following code records the R version used to render this report.\n\n\nCode\nset.seed(20260919)\n\nR.version.string\n\n\n[1] \"R version 4.5.3 (2026-03-11)\""
   }
