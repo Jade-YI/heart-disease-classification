@@ -3,10 +3,12 @@ title: "Facteurs associés à l'accident vasculaire cérébral chez les adultes 
 subtitle: "Analyse transversale du jeu de données de prédiction des AVC de Kaggle"
 author: "Jiahui YI / Jade YI"
 date: "20/09/2026"
+lang: fr
 format:
   html:
     toc: true
     toc-depth: 3
+    number-sections: true
     code-fold: true
     embed-resources: true
     theme: cosmo
@@ -15,65 +17,70 @@ execute:
   warning: false
   message: false
 ---
+
 # Introduction et objectifs
 
-## Question de recherche
-## Hypothèses
-## Objectifs de l’analyse
+## Objectifs de l'analyse
 
+L'accident vasculaire cérébral (AVC) est un problème majeur de santé publique, à la fois par sa mortalité et par les séquelles qu'il entraîne. Identifier les facteurs associés à sa survenue permet de mieux cibler la prévention.
 
-# Source des données et population source
+## Méthode
 
-## Source des données
-## Population source et unité d’analyse
-## Portée de l’analyse
+L'analyse repose sur une régression logistique multivariée standard, avec l'AVC (oui/non) comme variable dépendante. Les résultats seront exprimés sous forme d'*odds ratios* (OR) ajustés, accompagnés de leur intervalle de confiance à 95 %.
+
+Il s'agit d'une analyse observationnelle : les associations mises en évidence ne permettent pas, à elles seules, de conclure à un lien causal.# Introduction et objectifs
 
 
 # Évaluation initiale de la qualité des données
 
-## Structure initiale
-## Doublons et identifiants
-## Valeurs manquantes
-## Valeurs incohérentes ou improbables
-## Distribution de l’issue
+## Source des données 
 
+## Structure initiale （中风人数过多 比例分析）
+
+## Valeurs manquantes
+
+## Valeurs incohérentes ou improbables
+
+## Distribution de l’issue
 
 # Définition de la population analytique et préparation des données
 
 ## Critères d’inclusion et d’exclusion
-## Recodage des variables
-## Traitement des valeurs extrêmes
 
+## Recodage des variables
+
+## Traitement des valeurs extrêmes
 
 # Analyse et traitement des données manquantes
 
 ## Description des données manquantes
-## Stratégie principale
-## Analyse de sensibilité
 
+## Stratégie principale
+
+## Analyse de sensibilité
 
 # Description de la population
 
 ## Tableau 1
 
-
 # Analyse par régression logistique multivariée
 
 ## Spécification du modèle
-## Vérification des hypothèses
-## Résultats
 
+## Vérification des hypothèses
+
+## Résultats
 
 # Visualisation des résultats
 
 ## Forest plot des odds ratios ajustés
 
-
 # Analyses de sensibilité et diagnostics
-
 
 # Discussion
 
 ## Principaux résultats
+
 ## Limites
+
 ## Conclusion
