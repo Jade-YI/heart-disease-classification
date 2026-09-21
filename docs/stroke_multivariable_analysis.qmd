@@ -1,0 +1,79 @@
+---
+title: "Facteurs associés à l'accident vasculaire cérébral chez les adultes : une analyse multivariée avec imputations multiples"
+subtitle: "Analyse transversale du jeu de données de prédiction des AVC de Kaggle"
+author: "Jiahui YI / Jade YI"
+date: "20/09/2026"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    embed-resources: true
+    theme: cosmo
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+# Introduction et objectifs
+
+## Question de recherche
+## Hypothèses
+## Objectifs de l’analyse
+
+
+# Source des données et population source
+
+## Source des données
+## Population source et unité d’analyse
+## Portée de l’analyse
+
+
+# Évaluation initiale de la qualité des données
+
+## Structure initiale
+## Doublons et identifiants
+## Valeurs manquantes
+## Valeurs incohérentes ou improbables
+## Distribution de l’issue
+
+
+# Définition de la population analytique et préparation des données
+
+## Critères d’inclusion et d’exclusion
+## Recodage des variables
+## Traitement des valeurs extrêmes
+
+
+# Analyse et traitement des données manquantes
+
+## Description des données manquantes
+## Stratégie principale
+## Analyse de sensibilité
+
+
+# Description de la population
+
+## Tableau 1
+
+
+# Analyse par régression logistique multivariée
+
+## Spécification du modèle
+## Vérification des hypothèses
+## Résultats
+
+
+# Visualisation des résultats
+
+## Forest plot des odds ratios ajustés
+
+
+# Analyses de sensibilité et diagnostics
+
+
+# Discussion
+
+## Principaux résultats
+## Limites
+## Conclusion
