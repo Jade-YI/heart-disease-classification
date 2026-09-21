@@ -41,3 +41,48 @@ Les hypothèses originales seront conservées même si elles ne sont pas confirm
 **Statut :** Adoptée
 
 **Entrée AI associée :** AI-001
+
+---
+
+## DEC-003 — 2026-09-21
+
+**Étape :** Évaluation initiale de la qualité des données
+
+**Décision :**  
+Une évaluation systématique de la qualité des données sera réalisée avant toute analyse statistique ou modélisation.
+
+Cette évaluation comprendra les éléments suivants :
+
+1. la source et la provenance des données ;
+2. la structure initiale du jeu de données, notamment le nombre d’observations, le nombre de variables, les types de variables et la présence éventuelle de doublons ;
+3. la distribution de la variable `stroke`, notamment le nombre et la proportion de personnes avec et sans AVC ;
+4. les valeurs manquantes ;
+5. les valeurs incohérentes, impossibles ou improbables.
+
+**Justification :**  
+La qualité des données peut influencer le choix des méthodes statistiques et la validité des résultats. En particulier, une faible proportion d’AVC pourrait entraîner un déséquilibre de la variable dépendante et limiter le nombre de paramètres pouvant être estimés dans le modèle.
+
+**Conséquence pour l’analyse :**  
+Les décisions concernant l’exclusion d’observations, le traitement des données manquantes, le regroupement de catégories et la spécification du modèle seront prises après cette évaluation. Chaque modification importante fera l’objet d’une nouvelle entrée dans le journal des décisions.
+
+**Statut :** Adoptée
+
+---
+
+## DEC-004 — 2026-09-21
+
+**Étape :** Planification de l’analyse multivariable
+
+**Décision prévue :**  
+Une régression logistique multivariable est envisagée pour étudier les associations entre les facteurs de risque potentiels et la présence d’un AVC.
+
+La variable dépendante sera `stroke`, codée comme une variable binaire. Les résultats seront principalement présentés sous forme d’odds ratios ajustés accompagnés de leurs intervalles de confiance à 95 %.
+
+**Justification :**  
+La régression logistique est adaptée à une variable dépendante binaire et permet d’estimer l’association entre chaque variable explicative et l’AVC tout en tenant compte simultanément des autres variables incluses dans le modèle.
+
+**Conséquence pour l’analyse :**  
+Le modèle définitif ne sera établi qu’après l’évaluation de la qualité des données. Les variables ne seront pas sélectionnées uniquement en fonction de leur significativité statistique.
+
+**Statut :** Prévue — à confirmer après l’évaluation de la qualité des données
+
