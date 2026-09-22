@@ -120,6 +120,24 @@ Cet écart doit toutefois être interprété avec prudence : l'indicateur de San
 
 ## Valeurs manquantes
 
+```{r}
+#| label: valeurs-manquantes
+
+donnees |>
+  summarise(across(everything(), ~ sum(is.na(.)))) |>
+  pivot_longer(everything(), names_to = "Variable", values_to = "n_manquant") |>
+  filter(n_manquant > 0) |>
+  mutate(Pourcentage = scales::percent(n_manquant / nrow(donnees), accuracy = 0.1)) |>
+  rename(`Valeurs manquantes` = n_manquant) |>
+  knitr::kable()
+```
+
+Seule la variable `bmi` comporte des valeurs manquantes au sens strict (codées `NA`). Les autres variables ne présentent aucune valeur manquante déclarée.
+
+**Cas particulier de `smoking_status`.** Cette variable comporte une modalité `"Unknown"`, qui correspond fonctionnellement à une information manquante mais qui n'est pas codée comme `NA` dans le fichier source. Cette modalité n'est pas traitée dans cette section ; elle sera examinée séparément lors de la préparation des données pour la modélisation.
+
+À ce stade, nous nous limitons à documenter l'ampleur des valeurs manquantes de `bmi`. Leur traitement (exclusion ou imputation simple) sera décidé dans la section consacrée à la préparation des données pour la modélisation, en fonction de la stratégie retenue pour l'analyse multivariée.
+
 ## Valeurs incohérentes ou improbables
 
 # Définition de la population analytique et préparation des données
