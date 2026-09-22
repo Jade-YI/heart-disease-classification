@@ -140,6 +140,38 @@ Seule la variable `bmi` comporte des valeurs manquantes au sens strict (codées 
 
 ## Valeurs incohérentes ou improbables
 
+```{r}
+#| label: valeurs-improbables
+
+donnees |>
+  summarise(
+    `Âge min` = min(age),
+    `Âge max` = max(age),
+    `BMI min` = min(bmi, na.rm = TRUE),
+    `BMI max` = max(bmi, na.rm = TRUE),
+    `Glycémie min` = min(avg_glucose_level),
+    `Glycémie max` = max(avg_glucose_level)
+  ) |>
+  knitr::kable(digits = 1)
+```
+
+L'examen des étendues ne révèle pas de valeur aberrante évidente (âge négatif, BMI ou glycémie nul, etc.). Deux points méritent toutefois d'être signalés :
+
+- **Âges non entiers.** `r sum(donnees$age != round(donnees$age))` individus ont un âge non entier, tous âgés de moins de 2 ans. Il s'agit vraisemblablement d'un encodage de l'âge en fraction d'année chez les nourrissons, et non d'une erreur de saisie.
+- **BMI extrême.** La valeur maximale de BMI (`r max(donnees$bmi, na.rm = TRUE)`) est cliniquement très élevée. Cette valeur sera examinée individuellement lors de la préparation des données, sans être exclue à ce stade.
+
+```{r}
+#| label: coherence-gender
+
+donnees |> count(gender) |> knitr::kable()
+```
+
+La variable `gender` ne compte qu'une seule observation `"Other"`, effectif insuffisant pour l'analyse ; cette observation sera exclue.
+
+Aucune autre incohérence logique n'a été identifiée (âge/statut marital, âge/type d'emploi).
+
+**Stratégie retenue.** Le BMI maximal reste cliniquement possible : aucune modification n'est appliquée à ce stade. L'analyse sera d'abord réalisée sur les données brutes, puis en analyse de sensibilité après écrêtement (*winsorizing*) du BMI aux 2,5ᵉ et 97,5ᵉ percentiles. Les deux résultats seront comparés.
+
 # Définition de la population analytique et préparation des données
 
 ## Critères d’inclusion et d’exclusion
