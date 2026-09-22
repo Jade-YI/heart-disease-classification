@@ -49,4 +49,7 @@ rsconnect/
 /.quarto/
 **/*.quarto_ipynb
 .quarto/
-.DS_Store
+.DS_Store*.html
+docs/search.json
+docs/*_files/
+docs/site_libs/

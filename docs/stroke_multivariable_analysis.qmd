@@ -3,6 +3,7 @@ title: "Facteurs associés à l'accident vasculaire cérébral chez les adultes 
 subtitle: "Analyse transversale du jeu de données de prédiction des AVC de Kaggle"
 author: "Jiahui YI / Jade YI"
 date: "20/09/2026"
+bibliography: references.bib
 lang: fr
 format:
   html:
@@ -30,18 +31,96 @@ L'analyse repose sur une régression logistique multivariée standard, avec l'AV
 
 Il s'agit d'une analyse observationnelle : les associations mises en évidence ne permettent pas, à elles seules, de conclure à un lien causal.# Introduction et objectifs
 
-
 # Évaluation initiale de la qualité des données
 
-## Source des données 
+```{r}
+#| label: setup
+#| include: false
 
-## Structure initiale （中风人数过多 比例分析）
+library(tidyverse)
+```
+
+## Source des données
+
+Les données proviennent du jeu de données public *Stroke Prediction Dataset*, diffusé sur la plateforme Kaggle (fichier `healthcare-dataset-stroke-data.csv`). Chaque ligne correspond à un individu, décrit par :
+
+- des caractéristiques démographiques (âge, sexe, statut marital, type d'emploi, lieu de résidence) ;
+- des caractéristiques cliniques (hypertension, maladie cardiaque, glycémie moyenne, indice de masse corporelle) ;
+- un comportement (statut tabagique) ;
+- la survenue ou non d'un AVC.
+
+```{r}
+#| label: import-donnees
+
+donnees <- read_csv(
+  "healthcare-dataset-stroke-data.csv",
+  na = c("", "NA", "N/A")
+)
+
+```
+
+## Structure initiale
+
+```{r}
+#| label: structure-dimensions
+
+n_total <- nrow(donnees)
+n_avc   <- sum(donnees$stroke == 1)
+n_non   <- n_total - n_avc
+prop_avc <- n_avc / n_total
+ic_avc  <- binom.test(n_avc, n_total)$conf.int
+```
+
+Le fichier brut contient `r n_total` individus et `r ncol(donnees)` variables. Chaque `id` est-il unique ? `r if (anyDuplicated(donnees$id) == 0) "Oui" else "Non"`.
+
+### Répartition de l'AVC
+
+```{r}
+#| label: repartition-avc
+
+donnees |>
+  count(stroke) |>
+  mutate(
+    AVC = if_else(stroke == 1, "Oui", "Non"),
+    Proportion = scales::percent(n / sum(n), accuracy = 0.01)
+  ) |>
+  select(AVC, Effectif = n, Proportion) |>
+  knitr::kable()
+```
+
+```{r}
+#| label: graphique-avc
+#| fig-cap: "Répartition proportionnelle des individus selon la survenue d'un AVC"
+
+donnees |>
+  count(stroke) |>
+  mutate(
+    AVC = if_else(stroke == 1, "Oui", "Non"),
+    proportion = n / sum(n)
+  ) |>
+  ggplot(aes(x = AVC, y = proportion)) +
+  geom_col(width = 0.6) +
+  geom_text(
+    aes(label = scales::percent(proportion, accuracy = 0.1)),
+    vjust = -0.5
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 1)
+  ) +
+  labs(x = "AVC", y = "Proportion") +
+  theme_minimal()
+```
+
+L'AVC concerne `r n_avc` individus sur `r n_total`, soit `r scales::percent(prop_avc, accuracy = 0.1)` (IC à 95 % : `r scales::percent(ic_avc[1], accuracy = 0.1)` à `r scales::percent(ic_avc[2], accuracy = 0.1)`). Le rapport est d'environ `r round(n_non / n_avc, 1)` individus sans AVC pour un individu avec AVC.
+
+**Comparaison avec la prévalence nationale.** À titre de repère, Santé publique France estime la prévalence de l'AVC dans la population adulte française à 2,0 % en 2022, soit environ 1 086 795 cas prévalents [@spf2025avc]. La proportion observée dans notre échantillon (`r scales::percent(prop_avc, accuracy = 0.1)`, IC 95 % `r scales::percent(ic_avc[1], accuracy = 0.1)`–`r scales::percent(ic_avc[2], accuracy = 0.1)`) est très supérieure à ce repère national, et l'intervalle de confiance ne le recouvre pas.
+
+Cet écart doit toutefois être interprété avec prudence : l'indicateur de Santé publique France est une *prévalence* en population générale adulte au 1ᵉʳ janvier 2023, tandis que la variable `stroke` de notre jeu de données porte sur un échantillon dont le mode de constitution n'est pas documenté et qui inclut également des enfants. Les deux quantités ne sont donc pas strictement comparables terme à terme. Cela dit, l'ampleur de l'écart (plus du double) suggère fortement que l'échantillon n'a pas été prélevé au hasard dans la population générale, et probablement sur-représente les cas d'AVC (échantillonnage cas-témoins ou similaire). En conséquence, les résultats de cette analyse doivent être interprétés comme des associations internes à cet échantillon, et non extrapolés en population générale sans précaution. 
 
 ## Valeurs manquantes
 
 ## Valeurs incohérentes ou improbables
-
-## Distribution de l’issue
 
 # Définition de la population analytique et préparation des données
 
