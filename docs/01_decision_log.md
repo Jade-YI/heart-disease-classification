@@ -86,3 +86,22 @@ Le modèle définitif ne sera établi qu’après l’évaluation de la qualité
 
 **Statut :** Prévue — à confirmer après l’évaluation de la qualité des données
 
+---
+
+##DEC-005 — 2026-09-22
+
+Étape : Traitement des valeurs manquantes et extrêmes
+
+Décision :
+Les NA de bmi sont conservés pour le moment, sans imputation.
+
+Les valeurs extrêmes de bmi seront d’abord conservées. Une analyse de sensibilité sera ensuite réalisée en excluant les valeurs hors des percentiles 2,5–97,5 %.
+
+Les mineurs seront exclus de l’analyse principale.
+
+Justification :
+Éviter de supprimer ou modifier des données avant d’évaluer leur impact. L’analyse principale sera limitée aux adultes ; la justification de ce choix reste à préciser.
+
+Statut : Prévue — à confirmer avant l’analyse multivariable.
+
+
