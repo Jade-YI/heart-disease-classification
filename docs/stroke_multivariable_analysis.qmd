@@ -184,6 +184,9 @@ L'analyse porte uniquement sur les adultes : les individus âgés de moins de 18
 donnees_adultes <- donnees |>
   filter(age >= 18, gender != "Other") |>
   mutate(gender = droplevels(as.factor(gender)))
+donnees_adultes <- donnees_adultes |>
+  filter(work_type != "Never_worked") |>
+  mutate(work_type = droplevels(as.factor(work_type)))
 
 n_exclus_age    <- sum(donnees$age < 18)
 n_exclus_gender <- sum(donnees$age >= 18 & donnees$gender == "Other")
@@ -200,6 +203,7 @@ Le BMI comporte `r sum(is.na(donnees_adultes$bmi))` valeurs manquantes (`r scale
 mediane_bmi <- median(donnees_adultes$bmi, na.rm = TRUE)
 seuil_bas   <- quantile(donnees_adultes$bmi, 0.025, na.rm = TRUE)
 seuil_haut  <- quantile(donnees_adultes$bmi, 0.975, na.rm = TRUE)
+
 
 donnees_adultes <- donnees_adultes |>
   mutate(
