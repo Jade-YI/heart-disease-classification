@@ -38,6 +38,8 @@ Il s'agit d'une analyse observationnelle : les associations mises en évidence n
 #| include: false
 
 library(tidyverse)
+library(tidyverse)
+library(gtsummary)
 ```
 
 ## Source des données
@@ -116,7 +118,7 @@ L'AVC concerne `r n_avc` individus sur `r n_total`, soit `r scales::percent(prop
 
 **Comparaison avec la prévalence nationale.** À titre de repère, Santé publique France estime la prévalence de l'AVC dans la population adulte française à 2,0 % en 2022, soit environ 1 086 795 cas prévalents [@spf2025avc]. La proportion observée dans notre échantillon (`r scales::percent(prop_avc, accuracy = 0.1)`, IC 95 % `r scales::percent(ic_avc[1], accuracy = 0.1)`–`r scales::percent(ic_avc[2], accuracy = 0.1)`) est très supérieure à ce repère national, et l'intervalle de confiance ne le recouvre pas.
 
-Cet écart doit toutefois être interprété avec prudence : l'indicateur de Santé publique France est une *prévalence* en population générale adulte au 1ᵉʳ janvier 2023, tandis que la variable `stroke` de notre jeu de données porte sur un échantillon dont le mode de constitution n'est pas documenté et qui inclut également des enfants. Les deux quantités ne sont donc pas strictement comparables terme à terme. Cela dit, l'ampleur de l'écart (plus du double) suggère fortement que l'échantillon n'a pas été prélevé au hasard dans la population générale, et probablement sur-représente les cas d'AVC (échantillonnage cas-témoins ou similaire). En conséquence, les résultats de cette analyse doivent être interprétés comme des associations internes à cet échantillon, et non extrapolés en population générale sans précaution. 
+Cet écart doit toutefois être interprété avec prudence : l'indicateur de Santé publique France est une *prévalence* en population générale adulte au 1ᵉʳ janvier 2023, tandis que la variable `stroke` de notre jeu de données porte sur un échantillon dont le mode de constitution n'est pas documenté et qui inclut également des enfants. Les deux quantités ne sont donc pas strictement comparables terme à terme. Cela dit, l'ampleur de l'écart (plus du double) suggère fortement que l'échantillon n'a pas été prélevé au hasard dans la population générale, et probablement sur-représente les cas d'AVC (échantillonnage cas-témoins ou similaire). En conséquence, les résultats de cette analyse doivent être interprétés comme des associations internes à cet échantillon, et non extrapolés en population générale sans précaution.
 
 ## Valeurs manquantes
 
@@ -174,25 +176,110 @@ Aucune autre incohérence logique n'a été identifiée (âge/statut marital, â
 
 # Définition de la population analytique et préparation des données
 
-## Critères d’inclusion et d’exclusion
+L'analyse porte uniquement sur les adultes : les individus âgés de moins de 18 ans sont exclus, car le mécanisme et les facteurs de risque de l'AVC diffèrent fortement chez l'enfant, et plusieurs variables (`work_type`, `ever_married`) n'ont pas de sens pour cette population. L'unique observation `gender = "Other"` est également exclue, son effectif étant insuffisant pour être traitée comme catégorie à part entière.
 
-## Recodage des variables
+```{r}
+#| label: population-analytique
 
-## Traitement des valeurs extrêmes
+donnees_adultes <- donnees |>
+  filter(age >= 18, gender != "Other") |>
+  mutate(gender = droplevels(as.factor(gender)))
 
-# Analyse et traitement des données manquantes
+n_exclus_age    <- sum(donnees$age < 18)
+n_exclus_gender <- sum(donnees$age >= 18 & donnees$gender == "Other")
+n_analyse       <- nrow(donnees_adultes)
+```
 
-## Description des données manquantes
+Sur les `r nrow(donnees)` individus du fichier initial, `r n_exclus_age` sont exclus pour âge inférieur à 18 ans et `r n_exclus_gender` pour la catégorie `gender = "Other"`, soit une population analytique de `r n_analyse` individus.
 
-## Stratégie principale
+Le BMI comporte `r sum(is.na(donnees_adultes$bmi))` valeurs manquantes (`r scales::percent(sum(is.na(donnees_adultes$bmi))/n_analyse, accuracy = 0.1)`). Ce taux étant faible, les valeurs manquantes sont imputées par la médiane, sans recours à une imputation multiple.
 
-## Analyse de sensibilité
+```{r}
+#| label: preparation-variables
+
+mediane_bmi <- median(donnees_adultes$bmi, na.rm = TRUE)
+seuil_bas   <- quantile(donnees_adultes$bmi, 0.025, na.rm = TRUE)
+seuil_haut  <- quantile(donnees_adultes$bmi, 0.975, na.rm = TRUE)
+
+donnees_adultes <- donnees_adultes |>
+  mutate(
+    bmi = if_else(is.na(bmi), mediane_bmi, bmi),
+    bmi_wins = case_when(
+      bmi < seuil_bas  ~ seuil_bas,
+      bmi > seuil_haut ~ seuil_haut,
+      TRUE ~ bmi
+    ),
+    stroke        = factor(stroke, levels = c(0, 1), labels = c("Non", "Oui")),
+    hypertension  = factor(hypertension, levels = c(0, 1), labels = c("Non", "Oui")),
+    heart_disease = factor(heart_disease, levels = c(0, 1), labels = c("Non", "Oui"))
+  )
+```
+
+Après imputation, deux versions du BMI sont disponibles : `bmi` (valeurs brutes, hors valeur maximale extrême) et `bmi_wins`, où les valeurs inférieures au 2,5ᵉ percentile ou supérieures au 97,5ᵉ percentile sont ramenées à ces seuils. `r sum(donnees_adultes$bmi < seuil_bas)` valeur(s) sont ramenées au seuil inférieur (`r round(seuil_bas, 1)`) et `r sum(donnees_adultes$bmi > seuil_haut)` au seuil supérieur (`r round(seuil_haut, 1)`).
+
+**Analyse principale et analyse de sensibilité.** L'analyse principale sera conduite avec `bmi_wins`. Une analyse de sensibilité sera réalisée avec `bmi` brut afin de vérifier que les estimations ne sont pas portées par la valeur extrême.
 
 # Description de la population
 
-## Tableau 1
+Le tableau 1 décrit les caractéristiques de la population analytique selon la survenue ou non d'un AVC.
+
+```{r}
+#| label: table1
+
+donnees_adultes |>
+  select(
+    stroke, age, gender, hypertension, heart_disease,
+    ever_married, work_type, Residence_type,
+    avg_glucose_level, bmi_wins, smoking_status
+  ) |>
+  tbl_summary(
+    by = stroke,
+    label = list(
+      age                ~ "Âge (années)",
+      gender             ~ "Sexe",
+      hypertension       ~ "Hypertension",
+      heart_disease      ~ "Maladie cardiaque",
+      ever_married       ~ "Déjà marié(e)",
+      work_type          ~ "Type d'emploi",
+      Residence_type     ~ "Lieu de résidence",
+      avg_glucose_level  ~ "Glycémie moyenne (mg/dL)",
+      bmi_wins           ~ "IMC (kg/m², écrêté)",
+      smoking_status     ~ "Statut tabagique"
+    ),
+    statistic = list(
+      all_continuous()  ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = all_continuous() ~ 1
+  ) |>
+  add_p(test = list(all_continuous() ~ "t.test")) |>
+  add_overall() |>
+  modify_header(label ~ "**Variable**") |>
+  modify_caption("**Tableau 1.** Caractéristiques de la population selon le statut AVC")
+```
+
+Les variables continues sont présentées en moyenne (écart-type) et comparées par test t de Student ; les variables catégorielles sont présentées en effectif (pourcentage) et comparées par test du χ² (ou test exact de Fisher en cas d'effectifs attendus trop faibles).
 
 # Analyse par régression logistique multivariée
+
+## Modèle principal
+
+Un modèle de régression logistique multivariée est ajusté, avec la survenue d'un AVC comme variable dépendante. Les covariables incluses sont l'âge, le sexe, l'hypertension, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, la glycémie moyenne, l'IMC (version écrêtée) et le statut tabagique — soit l'ensemble des variables décrites au tableau 1.
+
+```{r}
+#| label: modele-principal
+
+modele_principal <- glm(
+  stroke ~ age + gender + hypertension + heart_disease + ever_married +
+    work_type + Residence_type + avg_glucose_level + bmi_wins + smoking_status,
+  data = donnees_adultes,
+  family = binomial(link = "logit")
+)
+
+tbl_regression(modele_principal, exponentiate = TRUE) |>
+  modify_header(label ~ "**Variable**") |>
+  modify_caption("**Tableau 2.** Odds ratios ajustés (IC 95%) de l'association avec l'AVC")
+```
 
 ## Spécification du modèle
 
@@ -205,8 +292,6 @@ Aucune autre incohérence logique n'a été identifiée (âge/statut marital, â
 ## Forest plot des odds ratios ajustés
 
 # Analyses de sensibilité et diagnostics
-
-# Discussion
 
 ## Principaux résultats
 
