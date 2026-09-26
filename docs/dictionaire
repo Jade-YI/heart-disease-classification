@@ -1,0 +1,31 @@
+原始数据
+
+- `donnees`:原始导入数据,5110 行,未做任何筛选或修改
+
+分析数据
+
+- `donnees_adultes`:最终分析数据集。已排除年龄小于 18 岁的个体、已排除 `gender="Other"`,BMI 缺失值已用中位数填补,同时保留 `bmi`(填补后原始值)和 `bmi_wins`(填补+截尾后的值)两个版本,`stroke`、`hypertension`、`heart_disease` 已转换为因子类型
+
+汇总统计变量
+
+- `n_total`:原始数据总人数(5110)
+- `n_avc`:原始数据中 AVC 病例数(249)
+- `n_non`:原始数据中非 AVC 人数(4861)
+- `prop_avc`:原始数据中 AVC 比例(约 4.87%)
+- `ic_avc`:上述比例的精确二项分布 95% 置信区间
+- `n_exclus_age`:因年龄小于 18 岁被排除的人数
+- `n_exclus_gender`:因 `gender="Other"` 被排除的成人人数
+- `n_analyse`:排除后剩下的分析人群人数
+
+BMI 处理相关变量
+
+- `mediane_bmi`:用于填补缺失值的 BMI 中位数
+- `seuil_bas`:BMI 的 2.5% 分位数,截尾下限
+- `seuil_haut`:BMI 的 97.5% 分位数,截尾上限
+- `bmi`:数据框中的列,填补缺失值后的原始 BMI,未截尾
+- `bmi_wins`:数据框中的列,填补加截尾后的 BMI,作为主分析变量使用
+
+已废弃、不再使用的变量
+
+- `donnees_complete`:原"删除缺失值版本",现方案已不做此对比,已移除
+- `donnees_impute`:原单独的填补版本数据框,现已合并进 `donnees_adultes`,已移除

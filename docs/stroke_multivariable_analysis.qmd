@@ -5,6 +5,7 @@ author: "Jiahui YI / Jade YI"
 date: "20/09/2026"
 bibliography: references.bib
 lang: fr
+
 format:
   html:
     toc: true
@@ -13,25 +14,31 @@ format:
     code-fold: true
     embed-resources: true
     theme: cosmo
+
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+
 execute:
   echo: true
   warning: false
   message: false
 ---
 
-# 1.Introduction et objectifs
+# Introduction et objectifs
 
-## 1.1 Objectifs de l'analyse
+## Objectifs de l'analyse
 
 L'accident vasculaire cérébral (AVC) est un problème majeur de santé publique, à la fois par sa mortalité et par les séquelles qu'il entraîne. Identifier les facteurs associés à sa survenue permet de mieux cibler la prévention.
 
-## 1.2 Méthode
+## Méthode
 
 L'analyse repose sur une régression logistique multivariée standard, avec l'AVC (oui/non) comme variable dépendante. Les résultats seront exprimés sous forme d'*odds ratios* (OR) ajustés, accompagnés de leur intervalle de confiance à 95 %.
 
 Il s'agit d'une analyse observationnelle : les associations mises en évidence ne permettent pas, à elles seules, de conclure à un lien causal.# Introduction et objectifs
 
-# 2.Source des données
+# Source des données
 
 ```{r}
 #| label: setup
@@ -61,7 +68,7 @@ donnees <- read_csv(
 
 ```
 
-## 2.1 Structure initiale
+## Structure initiale
 
 ```{r}
 #| label: structure-dimensions
@@ -75,7 +82,7 @@ ic_avc  <- binom.test(n_avc, n_total)$conf.int
 
 Le fichier brut contient `r n_total` individus et `r ncol(donnees)` variables. Chaque `id` est-il unique ? `r if (anyDuplicated(donnees$id) == 0) "Oui" else "Non"`.
 
-### 2.1.1Répartition de l'AVC
+### Répartition de l'AVC
 
 ```{r}
 #| label: repartition-avc
@@ -120,9 +127,9 @@ L'AVC concerne `r n_avc` individus sur `r n_total`, soit `r scales::percent(prop
 
 Cet écart doit toutefois être interprété avec prudence : l'indicateur de Santé publique France est une *prévalence* en population générale adulte au 1ᵉʳ janvier 2023, tandis que la variable `stroke` de notre jeu de données porte sur un échantillon dont le mode de constitution n'est pas documenté et qui inclut également des enfants. Les deux quantités ne sont donc pas strictement comparables terme à terme. Cela dit, l'ampleur de l'écart (plus du double) suggère fortement que l'échantillon n'a pas été prélevé au hasard dans la population générale, et probablement sur-représente les cas d'AVC (échantillonnage cas-témoins ou similaire). En conséquence, les résultats de cette analyse doivent être interprétés comme des associations internes à cet échantillon, et non extrapolés en population générale sans précaution.
 
-#3.Évaluation initiale de la qualité des données
+# Évaluation initiale de la qualité des données
 
-## 3.1 Valeurs manquantes
+## Valeurs manquantes
 
 ```{r}
 #| label: valeurs-manquantes
@@ -142,7 +149,7 @@ Seule la variable `bmi` comporte des valeurs manquantes au sens strict (codées 
 
 À ce stade, nous nous limitons à documenter l'ampleur des valeurs manquantes de `bmi`. Leur traitement (exclusion ou imputation simple) sera décidé dans la section consacrée à la préparation des données pour la modélisation, en fonction de la stratégie retenue pour l'analyse multivariée.
 
-## 3.2 Valeurs incohérentes ou improbables
+## Valeurs incohérentes ou improbables
 
 ```{r}
 #| label: valeurs-improbables
@@ -176,7 +183,7 @@ Aucune autre incohérence logique n'a été identifiée (âge/statut marital, â
 
 **Stratégie retenue.** Le BMI maximal reste cliniquement possible : aucune modification n'est appliquée à ce stade. L'analyse sera d'abord réalisée sur les données brutes, puis en analyse de sensibilité après écrêtement (*winsorizing*) du BMI aux 2,5ᵉ et 97,5ᵉ percentiles. Les deux résultats seront comparés.
 
-# 4.Définition de la population analytique et préparation des données
+# Définition de la population analytique et préparation des données
 
 L'analyse porte uniquement sur les adultes : les individus âgés de moins de 18 ans sont exclus, car le mécanisme et les facteurs de risque de l'AVC diffèrent fortement chez l'enfant, et plusieurs variables (`work_type`, `ever_married`) n'ont pas de sens pour cette population. L'unique observation `gender = "Other"` est également exclue, son effectif étant insuffisant pour être traitée comme catégorie à part entière.
 
@@ -225,164 +232,14 @@ Après imputation, deux versions du BMI sont disponibles : `bmi` (valeurs brutes
 
 **Analyse principale et analyse de sensibilité.** L'analyse principale sera conduite avec `bmi_wins`. Une analyse de sensibilité sera réalisée avec `bmi` brut afin de vérifier que les estimations ne sont pas portées par la valeur extrême.
 
-# 5.Résultats  
+# Méthodes statistiques  
 
-## 5.1 Description de la population
+L'association entre chaque facteur et la survenue d'un AVC est d'abord décrite en analyse univariée (tableau 1), puis évaluée par régression logistique multivariée, l'AVC (oui/non) étant la variable dépendante. Les résultats sont exprimés en *odds ratios* (OR) ajustés avec leur intervalle de confiance à 95 %. Le seuil de significativité est fixé à 0,05.
 
-Le tableau 1 décrit les caractéristiques de la population analytique selon la survenue ou non d'un AVC.
+Les variables d'ajustement ont été choisies a priori, en particulier au regard du rôle de confusion potentiel de l'âge (voir schéma ci-dessous). Deux analyses de sensibilité sont réalisées : l'une sur le BMI non écrêté (par opposition au BMI écrêté du modèle principal), l'autre en exprimant la glycémie moyenne par tranche de 10 mg/dL plutôt que par unité.
 
-```{r}
-#| label: table1
-
-donnees_adultes |>
-  select(
-    stroke, age, gender, hypertension, heart_disease,
-    ever_married, work_type, Residence_type,
-    avg_glucose_level, bmi_wins, smoking_status
-  ) |>
-  tbl_summary(
-    by = stroke,
-    label = list(
-      age                ~ "Âge (années)",
-      gender             ~ "Sexe",
-      hypertension       ~ "Hypertension",
-      heart_disease      ~ "Maladie cardiaque",
-      ever_married       ~ "Déjà marié(e)",
-      work_type          ~ "Type d'emploi",
-      Residence_type     ~ "Lieu de résidence",
-      avg_glucose_level  ~ "Glycémie moyenne (mg/dL)",
-      bmi_wins           ~ "IMC (kg/m², écrêté)",
-      smoking_status     ~ "Statut tabagique"
-    ),
-    statistic = list(
-      all_continuous()  ~ "{mean} ({sd})",
-      all_categorical() ~ "{n} ({p}%)"
-    ),
-    digits = all_continuous() ~ 1
-  ) |>
-  add_p(test = list(all_continuous() ~ "t.test")) |>
-  add_overall() |>
-  modify_header(label ~ "**Variable**") |>
-  modify_caption("**Tableau 1.** Caractéristiques de la population selon le statut AVC")
-```
-
-Les variables continues sont présentées en moyenne (écart-type) et comparées par test t de Student ; les variables catégorielles sont présentées en effectif (pourcentage) et comparées par test du χ² (ou test exact de Fisher en cas d'effectifs attendus trop faibles).
-
-## 5.2 Analyse par régression logistique multivariée
-
-Un modèle de régression logistique multivariée est ajusté, avec la survenue d'un AVC comme variable dépendante. Les covariables incluses sont l'âge, le sexe, l'hypertension, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, la glycémie moyenne, l'IMC (version écrêtée) et le statut tabagique — soit l'ensemble des variables décrites au tableau 1.
-
-```{r}
-#| label: modele-principal
-
-modele_principal <- glm(
-  stroke ~ age + gender + hypertension + heart_disease + ever_married +
-    work_type + Residence_type + avg_glucose_level + bmi_wins + smoking_status,
-  data = donnees_adultes,
-  family = binomial(link = "logit")
-)
-
-tbl_regression(modele_principal, exponentiate = TRUE) |>
-  modify_header(label ~ "**Variable**") |>
-  modify_caption("**Tableau 2.** Odds ratios ajustés (IC 95%) de l'association avec l'AVC")
-```
-
-Après ajustement, l'âge (`OR = 1.08` par année, IC 95 % 1.07–1.09, p < 0,001), l'hypertension (`OR = 1.49`, IC 95 % 1.07–2.05, p = 0,015) et la glycémie moyenne (`OR = 1.00` par mg/dL, IC 95 % 1.00–1.01, p < 0,001) sont significativement et indépendamment associées à l'AVC.
-
-Les autres covariables ne sont pas significativement associées à l'AVC dans ce modèle ajusté : le sexe, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, l'IMC (version écrêtée) et le statut tabagique.
-
-La maladie cardiaque, significativement associée à l'AVC en analyse univariée (tableau 1), ne l'est plus après ajustement (`OR = 1.32`, IC 95 % 0.90–1.90, p = 0.15). Cette atténuation suggère que l'association observée en univariée est en partie expliquée par l'âge, les patients porteurs d'une maladie cardiaque étant en moyenne plus âgés.
-
-**Cas particulier de la glycémie moyenne.** Bien que statistiquement significatif, l'OR de `avg_glucose_level` est très proche de 1 (1,00 par unité de mg/dL). Cela reflète l'échelle de la variable : un écart de 1 mg/dL est cliniquement négligeable, alors qu'un écart de 20 ou 30 mg/dL est cliniquement pertinent. L'ampleur réelle de l'effet est donc sous-estimée visuellement par cet OR unitaire.
-
-```{r}
-#| label: modele-glucose-echelle
-
-donnees_adultes <- donnees_adultes |>
-  mutate(glucose_10 = avg_glucose_level / 10)
-
-modele_glucose <- glm(
-  stroke ~ age + gender + hypertension + heart_disease + ever_married +
-    work_type + Residence_type + glucose_10 + bmi_wins + smoking_status,
-  data = donnees_adultes,
-  family = binomial(link = "logit")
-)
-
-or_glucose <- exp(coef(modele_glucose)["glucose_10"])
-ic_glucose <- exp(confint.default(modele_glucose)["glucose_10", ])
-```
-
-Exprimé pour une augmentation de 10 mg/dL, l'effet de la glycémie moyenne devient plus interprétable : OR = `r round(or_glucose, 2)` (IC 95 % `r round(ic_glucose[1], 2)`–`r round(ic_glucose[2], 2)`). Les coefficients des autres covariables sont strictement identiques à ceux du modèle principal, seule l'échelle de `avg_glucose_level` étant modifiée.
-
-## 5.3 Analyse de sensibilité : effet de l'écrêtement du BMI
-
-Afin de vérifier que les résultats ne sont pas portés par la valeur extrême de BMI identifiée en évaluation de la qualité des données, le modèle principal est reproduit à l'identique en remplaçant `bmi_wins` par le BMI brut (non écrêté).
-
-```{r}
-#| label: modele-sensibilite-bmi
-
-modele_bmi_brut <- glm(
-  stroke ~ age + gender + hypertension + heart_disease + ever_married +
-    work_type + Residence_type + avg_glucose_level + bmi + smoking_status,
-  data = donnees_adultes,
-  family = binomial(link = "logit")
-)
-
-tbl_regression(modele_bmi_brut, exponentiate = TRUE) |>
-  modify_header(label ~ "**Variable**") |>
-  modify_caption("**Tableau 3.** Modèle avec BMI brut (analyse de sensibilité)")
-```
-
-```{r}
-#| label: comparaison-bmi
-
-or_wins <- exp(coef(modele_principal)["bmi_wins"])
-or_brut <- exp(coef(modele_bmi_brut)["bmi"])
-```
-
-Le coefficient du BMI reste non significatif dans les deux versions du modèle (BMI écrêté : OR = `r round(or_wins, 2)` ; BMI brut : OR = `r round(or_brut, 2)`), et les coefficients des autres covariables ne sont pas modifiés de façon substantielle. Les résultats de l'analyse principale ne sont donc pas sensibles à la valeur extrême de BMI identifiée précédemment.
-
-## 5.4 Représentation graphique des résultats
-
-```{r}
-#| label: foret-modele-principal
-#| fig-cap: "Odds ratios ajustés (IC 95%) du modèle principal"
-#| fig-width: 7
-#| fig-height: 6
-
-etiquettes <- c(
-  age                        = "Âge",
-  genderMale                 = "Sexe : Homme",
-  hypertensionOui            = "Hypertension",
-  heart_diseaseOui           = "Maladie cardiaque",
-  ever_marriedYes            = "Déjà marié(e)",
-  work_typePrivate           = "Emploi : Privé",
-  `work_typeSelf-employed`   = "Emploi : Indépendant",
-  Residence_typeUrban        = "Résidence : Urbaine",
-  avg_glucose_level          = "Glycémie moyenne",
-  bmi_wins                   = "IMC (écrêté)",
-  `smoking_statusnever smoked` = "Tabac : jamais fumé",
-  smoking_statussmokes       = "Tabac : fumeur actuel",
-  smoking_statusUnknown      = "Tabac : inconnu"
-)
-
-resultats_modele <- tidy(modele_principal, exponentiate = TRUE, conf.int = TRUE) |>
-  filter(term != "(Intercept)") |>
-  mutate(term = recode(term, !!!etiquettes))
-
-ggplot(resultats_modele, aes(x = estimate, y = fct_reorder(term, estimate))) +
-  geom_vline(xintercept = 1, linetype = "dashed", color = "grey50") +
-  geom_pointrange(aes(xmin = conf.low, xmax = conf.high)) +
-  scale_x_log10() +
-  labs(
-    x = "Odds ratio (échelle log)",
-    y = NULL,
-    title = "Facteurs associés à l'AVC (modèle ajusté)"
-  ) +
-  theme_minimal()
-```
-
-## 5.5 Structure causale hypothétique (DAG)
+Toutes les analyses sont réalisées avec R, à l'aide des packages `tidyverse`, `gtsummary` et `broom`.
+## Structure causale hypothétique (DAG)
 
 Le graphe ci-dessous représente la structure de relations formulée a priori dans les hypothèses (section « Hypothèses et prédictions »), avant l'analyse des données. Il ne s'agit pas d'une structure confirmée, mais d'une représentation graphique du raisonnement ayant guidé le choix des variables d'ajustement, centré sur l'âge comme facteur de confusion principal.
 
@@ -430,12 +287,200 @@ ggplot(dag_avc, aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_label(aes(label = label), na.rm = TRUE, size = 3.2) +
   theme_dag()
 ```
+
+# Résultats  
+
+## Description de la population
+
+Le tableau 1 décrit les caractéristiques de la population analytique selon la survenue ou non d'un AVC.
+
+```{r}
+#| label: table1
+
+donnees_adultes |>
+  select(
+    stroke, age, gender, hypertension, heart_disease,
+    ever_married, work_type, Residence_type,
+    avg_glucose_level, bmi_wins, smoking_status
+  ) |>
+  tbl_summary(
+    by = stroke,
+    label = list(
+      age                ~ "Âge (années)",
+      gender             ~ "Sexe",
+      hypertension       ~ "Hypertension",
+      heart_disease      ~ "Maladie cardiaque",
+      ever_married       ~ "Déjà marié(e)",
+      work_type          ~ "Type d'emploi",
+      Residence_type     ~ "Lieu de résidence",
+      avg_glucose_level  ~ "Glycémie moyenne (mg/dL)",
+      bmi_wins           ~ "IMC (kg/m², écrêté)",
+      smoking_status     ~ "Statut tabagique"
+    ),
+    statistic = list(
+      all_continuous()  ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    digits = all_continuous() ~ 1
+  ) |>
+  add_p(test = list(all_continuous() ~ "t.test")) |>
+  add_overall() |>
+  modify_header(label ~ "**Variable**") |>
+  modify_caption("**Tableau 1.** Caractéristiques de la population selon le statut AVC")
+```
+
+Les variables continues sont présentées en moyenne (écart-type) et comparées par test t de Student ; les variables catégorielles sont présentées en effectif (pourcentage) et comparées par test du χ² (ou test exact de Fisher en cas d'effectifs attendus trop faibles).
+
+## Modèle multivarié
+
+Un modèle de régression logistique multivariée est ajusté, avec la survenue d'un AVC comme variable dépendante. Les covariables incluses sont l'âge, le sexe, l'hypertension, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, la glycémie moyenne, l'IMC (version écrêtée) et le statut tabagique — soit l'ensemble des variables décrites au tableau 1.
+
+```{r}
+#| label: modele-principal
+
+modele_principal <- glm(
+  stroke ~ age + gender + hypertension + heart_disease + ever_married +
+    work_type + Residence_type + avg_glucose_level + bmi_wins + smoking_status,
+  data = donnees_adultes,
+  family = binomial(link = "logit")
+)
+
+tbl_regression(modele_principal, exponentiate = TRUE) |>
+  modify_header(label ~ "**Variable**") |>
+  modify_caption("**Tableau 2.** Odds ratios ajustés (IC 95%) de l'association avec l'AVC")
+```
+
+Après ajustement, l'âge (`OR = 1.08` par année, IC 95 % 1.07–1.09, p < 0,001), l'hypertension (`OR = 1.49`, IC 95 % 1.07–2.05, p = 0,015) et la glycémie moyenne (`OR = 1.00` par mg/dL, IC 95 % 1.00–1.01, p < 0,001) sont significativement et indépendamment associées à l'AVC.
+
+Les autres covariables ne sont pas significativement associées à l'AVC dans ce modèle ajusté : le sexe, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, l'IMC (version écrêtée) et le statut tabagique.
+
+La maladie cardiaque, significativement associée à l'AVC en analyse univariée (tableau 1), ne l'est plus après ajustement (`OR = 1.32`, IC 95 % 0.90–1.90, p = 0.15). Cette atténuation suggère que l'association observée en univariée est en partie expliquée par l'âge, les patients porteurs d'une maladie cardiaque étant en moyenne plus âgés.
+
+**Cas particulier de la glycémie moyenne.** Bien que statistiquement significatif, l'OR de `avg_glucose_level` est très proche de 1 (1,00 par unité de mg/dL). Cela reflète l'échelle de la variable : un écart de 1 mg/dL est cliniquement négligeable, alors qu'un écart de 20 ou 30 mg/dL est cliniquement pertinent. L'ampleur réelle de l'effet est donc sous-estimée visuellement par cet OR unitaire.
+
+```{r}
+#| label: modele-glucose-echelle
+
+donnees_adultes <- donnees_adultes |>
+  mutate(glucose_10 = avg_glucose_level / 10)
+
+modele_glucose <- glm(
+  stroke ~ age + gender + hypertension + heart_disease + ever_married +
+    work_type + Residence_type + glucose_10 + bmi_wins + smoking_status,
+  data = donnees_adultes,
+  family = binomial(link = "logit")
+)
+
+or_glucose <- exp(coef(modele_glucose)["glucose_10"])
+ic_glucose <- exp(confint.default(modele_glucose)["glucose_10", ])
+```
+
+Exprimé pour une augmentation de 10 mg/dL, l'effet de la glycémie moyenne devient plus interprétable : OR = `r round(or_glucose, 2)` (IC 95 % `r round(ic_glucose[1], 2)`–`r round(ic_glucose[2], 2)`). Les coefficients des autres covariables sont strictement identiques à ceux du modèle principal, seule l'échelle de `avg_glucose_level` étant modifiée.
+
+## Analyse de sensibilité (BMI)
+
+Afin de vérifier que les résultats ne sont pas portés par la valeur extrême de BMI identifiée en évaluation de la qualité des données, le modèle principal est reproduit à l'identique en remplaçant `bmi_wins` par le BMI brut (non écrêté).
+
+```{r}
+#| label: modele-sensibilite-bmi
+
+modele_bmi_brut <- glm(
+  stroke ~ age + gender + hypertension + heart_disease + ever_married +
+    work_type + Residence_type + avg_glucose_level + bmi + smoking_status,
+  data = donnees_adultes,
+  family = binomial(link = "logit")
+)
+
+tbl_regression(modele_bmi_brut, exponentiate = TRUE) |>
+  modify_header(label ~ "**Variable**") |>
+  modify_caption("**Tableau 3.** Modèle avec BMI brut (analyse de sensibilité)")
+```
+
+```{r}
+#| label: comparaison-bmi
+
+or_wins <- exp(coef(modele_principal)["bmi_wins"])
+or_brut <- exp(coef(modele_bmi_brut)["bmi"])
+```
+
+Le coefficient du BMI reste non significatif dans les deux versions du modèle (BMI écrêté : OR = `r round(or_wins, 2)` ; BMI brut : OR = `r round(or_brut, 2)`), et les coefficients des autres covariables ne sont pas modifiés de façon substantielle. Les résultats de l'analyse principale ne sont donc pas sensibles à la valeur extrême de BMI identifiée précédemment.
+
+## Représentation graphique des résultats
+
+```{r}
+#| label: foret-modele-principal
+#| fig-cap: "Odds ratios ajustés (IC 95%) du modèle principal"
+#| fig-width: 7
+#| fig-height: 6
+
+etiquettes <- c(
+  age                        = "Âge",
+  genderMale                 = "Sexe : Homme",
+  hypertensionOui            = "Hypertension",
+  heart_diseaseOui           = "Maladie cardiaque",
+  ever_marriedYes            = "Déjà marié(e)",
+  work_typePrivate           = "Emploi : Privé",
+  `work_typeSelf-employed`   = "Emploi : Indépendant",
+  Residence_typeUrban        = "Résidence : Urbaine",
+  avg_glucose_level          = "Glycémie moyenne",
+  bmi_wins                   = "IMC (écrêté)",
+  `smoking_statusnever smoked` = "Tabac : jamais fumé",
+  smoking_statussmokes       = "Tabac : fumeur actuel",
+  smoking_statusUnknown      = "Tabac : inconnu"
+)
+
+resultats_modele <- tidy(modele_principal, exponentiate = TRUE, conf.int = TRUE) |>
+  filter(term != "(Intercept)") |>
+  mutate(term = recode(term, !!!etiquettes))
+
+ggplot(resultats_modele, aes(x = estimate, y = fct_reorder(term, estimate))) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high)) +
+  scale_x_log10() +
+  labs(
+    x = "Odds ratio (échelle log)",
+    y = NULL,
+    title = "Facteurs associés à l'AVC (modèle ajusté)"
+  ) +
+  theme_minimal()
+```
+
+
 Ce graphe formalise le raisonnement qui a guidé la sélection des variables d'ajustement : l'âge est traité comme un facteur de confusion central, susceptible d'expliquer une partie des associations brutes observées pour l'hypertension, la maladie cardiaque, le statut marital et le type d'emploi. Les résultats du modèle ajusté (tableau 2) sont cohérents avec cette structure : les associations portées uniquement par l'âge (statut marital, type d'emploi) disparaissent après ajustement, tandis que celles ayant une composante propre (hypertension, glycémie) persistent, au moins partiellement.
 
 
-# 6.Discussion
-## 6.1 Confrontation aux hypothèses
+# Discussion
 
-## 6.2 Limites
+## Confrontation aux hypothèses
 
-#7.Conclusion
+**Âge (H1).** L'association prédite se confirme et reste la plus forte du modèle (OR = 1,08 par année, p < 0,001). Elle persiste après ajustement, comme prévu.
+
+**Hypertension (H2).** L'association reste significative après ajustement (OR = 1,49, p = 0,015), mais son intensité diminue par rapport à l'analyse brute. L'hypothèse d'une atténuation partielle par l'âge se vérifie, sans disparition complète de l'effet.
+
+**Glycémie moyenne (H3).** L'association prédite se confirme. Exprimé par unité de mg/dL, l'OR est très proche de 1, ce qui reflète l'échelle de la variable plutôt qu'une absence d'effet réel : un écart de 1 mg/dL est cliniquement négligeable, alors qu'un écart plus important (par exemple 10 mg/dL) l'est davantage. Exprimé sur cette échelle, l'effet reste significatif mais modeste, sans permettre de conclure sur les mécanismes sous-jacents (âge, IMC, hypertension).
+
+**IMC (H4).** Contrairement à la prédiction, aucune association significative n'est observée, ni avec le BMI brut ni avec le BMI écrêté — les deux versions donnent des résultats quasi identiques (analyse de sensibilité). L'hypothèse d'un effet propre de l'IMC sur l'AVC, indépendamment de l'hypertension et de la glycémie, n'est pas soutenue par ces données. Une relation non linéaire, évoquée comme possibilité en H4, n'a pas été testée ici et pourrait expliquer en partie cette absence d'effet.
+
+**Tabagisme (H5).** Aucune des catégories n'est significativement associée à l'AVC après ajustement. L'hypothèse d'un effet propre du tabagisme n'est pas confirmée dans ce modèle.
+
+**Type d'emploi (H6).** Conformément à la prédiction, aucune association forte ne persiste après ajustement. Cette variable se confirme comme peu informative pour expliquer l'AVC une fois l'âge pris en compte.
+
+**Type de résidence (H7).** Aucune association observée, ni en brut ni en ajusté, conformément à la prédiction.
+
+**Statut matrimonial (H8).** L'hypothèse se confirme : l'association observée en analyse univariée disparaît après ajustement sur l'âge (OR = 0,82, p = 0,4). Cela illustre bien le phénomène anticipé d'une association trompeuse portée par l'âge.
+
+**Maladie cardiaque (H9).** L'association prédite comme forte s'atténue nettement après ajustement et devient non significative (OR = 1,32, p = 0,15). L'hypothèse prévoyait une atténuation partielle mais un effet résiduel important ; ce n'est pas ce qui est observé ici, l'âge semblant expliquer une grande partie de l'association brute — les patients porteurs d'une maladie cardiaque étant en moyenne plus âgés.
+
+**Genre (H10).** Aucune différence significative entre hommes et femmes n'est observée dans le modèle ajusté (OR = 1,04, p = 0,8). L'hypothèse d'un effet médié par le tabagisme n'a donc pas lieu d'être testée, faute d'association de départ à expliquer.
+
+## Limites
+
+La proportion d'AVC dans cet échantillon (4,9 %) est très supérieure à la prévalence nationale française (2,0 %), ce qui suggère un mode d'échantillonnage non aléatoire. Les résultats doivent donc être interprétés comme des associations internes à cet échantillon, sans extrapolation à la population générale.
+
+Le traitement des valeurs manquantes du BMI par imputation simple (médiane) constitue une autre limite : cette méthode réduit artificiellement la variance de la variable, ce qui peut conduire à sous-estimer son rôle réel.
+
+Enfin, le caractère transversal des données ne permet pas d'établir de séquence temporelle entre les facteurs étudiés et la survenue de l'AVC, ce qui limite toute interprétation causale.
+
+# Conclusion
+
+Parmi les facteurs étudiés, l'âge, l'hypertension et la glycémie moyenne restent indépendamment associés à l'AVC après ajustement. Les associations observées pour la maladie cardiaque et le statut matrimonial dans l'analyse brute s'expliquent en grande partie par l'âge. L'IMC, le tabagisme, le type d'emploi, le type de résidence et le genre ne montrent pas d'association indépendante dans cet échantillon.
