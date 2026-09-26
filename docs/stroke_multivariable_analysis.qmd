@@ -19,19 +19,19 @@ execute:
   message: false
 ---
 
-# Introduction et objectifs
+# 1.Introduction et objectifs
 
-## Objectifs de l'analyse
+## 1.1 Objectifs de l'analyse
 
 L'accident vasculaire cérébral (AVC) est un problème majeur de santé publique, à la fois par sa mortalité et par les séquelles qu'il entraîne. Identifier les facteurs associés à sa survenue permet de mieux cibler la prévention.
 
-## Méthode
+## 1.2 Méthode
 
 L'analyse repose sur une régression logistique multivariée standard, avec l'AVC (oui/non) comme variable dépendante. Les résultats seront exprimés sous forme d'*odds ratios* (OR) ajustés, accompagnés de leur intervalle de confiance à 95 %.
 
 Il s'agit d'une analyse observationnelle : les associations mises en évidence ne permettent pas, à elles seules, de conclure à un lien causal.# Introduction et objectifs
 
-# Évaluation initiale de la qualité des données
+# 2.Source des données
 
 ```{r}
 #| label: setup
@@ -41,9 +41,8 @@ library(tidyverse)
 library(tidyverse)
 library(gtsummary)
 library(broom)
+library(ggdag)
 ```
-
-## Source des données
 
 Les données proviennent du jeu de données public *Stroke Prediction Dataset*, diffusé sur la plateforme Kaggle (fichier `healthcare-dataset-stroke-data.csv`). Chaque ligne correspond à un individu, décrit par :
 
@@ -62,7 +61,7 @@ donnees <- read_csv(
 
 ```
 
-## Structure initiale
+## 2.1 Structure initiale
 
 ```{r}
 #| label: structure-dimensions
@@ -76,7 +75,7 @@ ic_avc  <- binom.test(n_avc, n_total)$conf.int
 
 Le fichier brut contient `r n_total` individus et `r ncol(donnees)` variables. Chaque `id` est-il unique ? `r if (anyDuplicated(donnees$id) == 0) "Oui" else "Non"`.
 
-### Répartition de l'AVC
+### 2.1.1Répartition de l'AVC
 
 ```{r}
 #| label: repartition-avc
@@ -121,7 +120,9 @@ L'AVC concerne `r n_avc` individus sur `r n_total`, soit `r scales::percent(prop
 
 Cet écart doit toutefois être interprété avec prudence : l'indicateur de Santé publique France est une *prévalence* en population générale adulte au 1ᵉʳ janvier 2023, tandis que la variable `stroke` de notre jeu de données porte sur un échantillon dont le mode de constitution n'est pas documenté et qui inclut également des enfants. Les deux quantités ne sont donc pas strictement comparables terme à terme. Cela dit, l'ampleur de l'écart (plus du double) suggère fortement que l'échantillon n'a pas été prélevé au hasard dans la population générale, et probablement sur-représente les cas d'AVC (échantillonnage cas-témoins ou similaire). En conséquence, les résultats de cette analyse doivent être interprétés comme des associations internes à cet échantillon, et non extrapolés en population générale sans précaution.
 
-## Valeurs manquantes
+#3.Évaluation initiale de la qualité des données
+
+## 3.1 Valeurs manquantes
 
 ```{r}
 #| label: valeurs-manquantes
@@ -141,7 +142,7 @@ Seule la variable `bmi` comporte des valeurs manquantes au sens strict (codées 
 
 À ce stade, nous nous limitons à documenter l'ampleur des valeurs manquantes de `bmi`. Leur traitement (exclusion ou imputation simple) sera décidé dans la section consacrée à la préparation des données pour la modélisation, en fonction de la stratégie retenue pour l'analyse multivariée.
 
-## Valeurs incohérentes ou improbables
+## 3.2 Valeurs incohérentes ou improbables
 
 ```{r}
 #| label: valeurs-improbables
@@ -175,7 +176,7 @@ Aucune autre incohérence logique n'a été identifiée (âge/statut marital, â
 
 **Stratégie retenue.** Le BMI maximal reste cliniquement possible : aucune modification n'est appliquée à ce stade. L'analyse sera d'abord réalisée sur les données brutes, puis en analyse de sensibilité après écrêtement (*winsorizing*) du BMI aux 2,5ᵉ et 97,5ᵉ percentiles. Les deux résultats seront comparés.
 
-# Définition de la population analytique et préparation des données
+# 4.Définition de la population analytique et préparation des données
 
 L'analyse porte uniquement sur les adultes : les individus âgés de moins de 18 ans sont exclus, car le mécanisme et les facteurs de risque de l'AVC diffèrent fortement chez l'enfant, et plusieurs variables (`work_type`, `ever_married`) n'ont pas de sens pour cette population. L'unique observation `gender = "Other"` est également exclue, son effectif étant insuffisant pour être traitée comme catégorie à part entière.
 
@@ -224,7 +225,9 @@ Après imputation, deux versions du BMI sont disponibles : `bmi` (valeurs brutes
 
 **Analyse principale et analyse de sensibilité.** L'analyse principale sera conduite avec `bmi_wins`. Une analyse de sensibilité sera réalisée avec `bmi` brut afin de vérifier que les estimations ne sont pas portées par la valeur extrême.
 
-# Description de la population
+# 5.Résultats  
+
+## 5.1 Description de la population
 
 Le tableau 1 décrit les caractéristiques de la population analytique selon la survenue ou non d'un AVC.
 
@@ -265,9 +268,7 @@ donnees_adultes |>
 
 Les variables continues sont présentées en moyenne (écart-type) et comparées par test t de Student ; les variables catégorielles sont présentées en effectif (pourcentage) et comparées par test du χ² (ou test exact de Fisher en cas d'effectifs attendus trop faibles).
 
-# Analyse par régression logistique multivariée
-
-## Modèle principal
+## 5.2 Analyse par régression logistique multivariée
 
 Un modèle de régression logistique multivariée est ajusté, avec la survenue d'un AVC comme variable dépendante. Les covariables incluses sont l'âge, le sexe, l'hypertension, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, la glycémie moyenne, l'IMC (version écrêtée) et le statut tabagique — soit l'ensemble des variables décrites au tableau 1.
 
@@ -313,7 +314,7 @@ ic_glucose <- exp(confint.default(modele_glucose)["glucose_10", ])
 
 Exprimé pour une augmentation de 10 mg/dL, l'effet de la glycémie moyenne devient plus interprétable : OR = `r round(or_glucose, 2)` (IC 95 % `r round(ic_glucose[1], 2)`–`r round(ic_glucose[2], 2)`). Les coefficients des autres covariables sont strictement identiques à ceux du modèle principal, seule l'échelle de `avg_glucose_level` étant modifiée.
 
-## Analyse de sensibilité : effet de l'écrêtement du BMI
+## 5.3 Analyse de sensibilité : effet de l'écrêtement du BMI
 
 Afin de vérifier que les résultats ne sont pas portés par la valeur extrême de BMI identifiée en évaluation de la qualité des données, le modèle principal est reproduit à l'identique en remplaçant `bmi_wins` par le BMI brut (non écrêté).
 
@@ -341,7 +342,7 @@ or_brut <- exp(coef(modele_bmi_brut)["bmi"])
 
 Le coefficient du BMI reste non significatif dans les deux versions du modèle (BMI écrêté : OR = `r round(or_wins, 2)` ; BMI brut : OR = `r round(or_brut, 2)`), et les coefficients des autres covariables ne sont pas modifiés de façon substantielle. Les résultats de l'analyse principale ne sont donc pas sensibles à la valeur extrême de BMI identifiée précédemment.
 
-## Représentation graphique des résultats
+## 5.4 Représentation graphique des résultats
 
 ```{r}
 #| label: foret-modele-principal
@@ -381,7 +382,7 @@ ggplot(resultats_modele, aes(x = estimate, y = fct_reorder(term, estimate))) +
   theme_minimal()
 ```
 
-## Structure causale hypothétique (DAG)
+## 5.5 Structure causale hypothétique (DAG)
 
 Le graphe ci-dessous représente la structure de relations formulée a priori dans les hypothèses (section « Hypothèses et prédictions »), avant l'analyse des données. Il ne s'agit pas d'une structure confirmée, mais d'une représentation graphique du raisonnement ayant guidé le choix des variables d'ajustement, centré sur l'âge comme facteur de confusion principal.
 
@@ -429,17 +430,12 @@ ggplot(dag_avc, aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_label(aes(label = label), na.rm = TRUE, size = 3.2) +
   theme_dag()
 ```
-## Vérification des hypothèses
-
-## Résultats
-
-# Visualisation des résultats
-
-## Forest plot des odds ratios ajustés
+Ce graphe formalise le raisonnement qui a guidé la sélection des variables d'ajustement : l'âge est traité comme un facteur de confusion central, susceptible d'expliquer une partie des associations brutes observées pour l'hypertension, la maladie cardiaque, le statut marital et le type d'emploi. Les résultats du modèle ajusté (tableau 2) sont cohérents avec cette structure : les associations portées uniquement par l'âge (statut marital, type d'emploi) disparaissent après ajustement, tandis que celles ayant une composante propre (hypertension, glycémie) persistent, au moins partiellement.
 
 
-## Principaux résultats
+# 6.Discussion
+## 6.1 Confrontation aux hypothèses
 
-## Limites
+## 6.2 Limites
 
-## Conclusion
+#7.Conclusion
