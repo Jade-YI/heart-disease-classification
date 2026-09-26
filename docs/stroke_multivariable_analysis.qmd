@@ -388,8 +388,17 @@ Le graphe ci-dessous représente la structure de relations formulée a priori da
 ```{r}
 #| label: dag-hypotheses
 #| fig-cap: "Structure causale hypothétique guidant l'analyse"
-#| fig-width: 8
+#| fig-width: 9
 #| fig-height: 6
+
+coords <- list(
+  x = c(age = 2, hypertension = 3, heart_disease = 3, ever_married = 3,
+        work_type = 3, gender = 2, smoking = 3, avg_glucose_level = 4,
+        bmi = 4, stroke = 5),
+  y = c(age = 3, hypertension = 4, heart_disease = 5, ever_married = 2,
+        work_type = 1, gender = 0, smoking = 0.5, avg_glucose_level = 3.5,
+        bmi = 2.5, stroke = 3)
+)
 
 dag_avc <- dagify(
   stroke ~ age + hypertension + heart_disease + avg_glucose_level + bmi + smoking + gender,
@@ -400,6 +409,7 @@ dag_avc <- dagify(
   smoking ~ gender,
   exposure = "age",
   outcome = "stroke",
+  coords = coords,
   labels = c(
     stroke             = "AVC",
     age                = "Âge",
@@ -414,7 +424,9 @@ dag_avc <- dagify(
   )
 )
 
-ggdag(dag_avc, text = FALSE, use_labels = "label") +
+ggplot(dag_avc, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_edges() +
+  geom_label(aes(label = label), na.rm = TRUE, size = 3.2) +
   theme_dag()
 ```
 ## Vérification des hypothèses
