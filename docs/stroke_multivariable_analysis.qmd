@@ -285,6 +285,60 @@ tbl_regression(modele_principal, exponentiate = TRUE) |>
   modify_caption("**Tableau 2.** Odds ratios ajustés (IC 95%) de l'association avec l'AVC")
 ```
 
+Après ajustement, l'âge (`OR = 1.08` par année, IC 95 % 1.07–1.09, p < 0,001), l'hypertension (`OR = 1.49`, IC 95 % 1.07–2.05, p = 0,015) et la glycémie moyenne (`OR = 1.00` par mg/dL, IC 95 % 1.00–1.01, p < 0,001) sont significativement et indépendamment associées à l'AVC.
+
+Les autres covariables ne sont pas significativement associées à l'AVC dans ce modèle ajusté : le sexe, la maladie cardiaque, le statut marital, le type d'emploi, le lieu de résidence, l'IMC (version écrêtée) et le statut tabagique.
+
+La maladie cardiaque, significativement associée à l'AVC en analyse univariée (tableau 1), ne l'est plus après ajustement (`OR = 1.32`, IC 95 % 0.90–1.90, p = 0.15). Cette atténuation suggère que l'association observée en univariée est en partie expliquée par l'âge, les patients porteurs d'une maladie cardiaque étant en moyenne plus âgés.
+
+**Cas particulier de la glycémie moyenne.** Bien que statistiquement significatif, l'OR de `avg_glucose_level` est très proche de 1 (1,00 par unité de mg/dL). Cela reflète l'échelle de la variable : un écart de 1 mg/dL est cliniquement négligeable, alors qu'un écart de 20 ou 30 mg/dL est cliniquement pertinent. L'ampleur réelle de l'effet est donc sous-estimée visuellement par cet OR unitaire.
+
+```{r}
+#| label: modele-glucose-echelle
+
+donnees_adultes <- donnees_adultes |>
+  mutate(glucose_10 = avg_glucose_level / 10)
+
+modele_glucose <- glm(
+  stroke ~ age + gender + hypertension + heart_disease + ever_married +
+    work_type + Residence_type + glucose_10 + bmi_wins + smoking_status,
+  data = donnees_adultes,
+  family = binomial(link = "logit")
+)
+
+or_glucose <- exp(coef(modele_glucose)["glucose_10"])
+ic_glucose <- exp(confint.default(modele_glucose)["glucose_10", ])
+```
+
+Exprimé pour une augmentation de 10 mg/dL, l'effet de la glycémie moyenne devient plus interprétable : OR = `r round(or_glucose, 2)` (IC 95 % `r round(ic_glucose[1], 2)`–`r round(ic_glucose[2], 2)`). Les coefficients des autres covariables sont strictement identiques à ceux du modèle principal, seule l'échelle de `avg_glucose_level` étant modifiée.
+
+## Analyse de sensibilité : effet de l'écrêtement du BMI
+
+Afin de vérifier que les résultats ne sont pas portés par la valeur extrême de BMI identifiée en évaluation de la qualité des données, le modèle principal est reproduit à l'identique en remplaçant `bmi_wins` par le BMI brut (non écrêté).
+
+```{r}
+#| label: modele-sensibilite-bmi
+
+modele_bmi_brut <- glm(
+  stroke ~ age + gender + hypertension + heart_disease + ever_married +
+    work_type + Residence_type + avg_glucose_level + bmi + smoking_status,
+  data = donnees_adultes,
+  family = binomial(link = "logit")
+)
+
+tbl_regression(modele_bmi_brut, exponentiate = TRUE) |>
+  modify_header(label ~ "**Variable**") |>
+  modify_caption("**Tableau 3.** Modèle avec BMI brut (analyse de sensibilité)")
+```
+
+```{r}
+#| label: comparaison-bmi
+
+or_wins <- exp(coef(modele_principal)["bmi_wins"])
+or_brut <- exp(coef(modele_bmi_brut)["bmi"])
+```
+
+Le coefficient du BMI reste non significatif dans les deux versions du modèle (BMI écrêté : OR = `r round(or_wins, 2)` ; BMI brut : OR = `r round(or_brut, 2)`), et les coefficients des autres covariables ne sont pas modifiés de façon substantielle. Les résultats de l'analyse principale ne sont donc pas sensibles à la valeur extrême de BMI identifiée précédemment.
 ## Spécification du modèle
 
 ## Vérification des hypothèses
