@@ -40,6 +40,7 @@ Il s'agit d'une analyse observationnelle : les associations mises en évidence n
 library(tidyverse)
 library(tidyverse)
 library(gtsummary)
+library(broom)
 ```
 
 ## Source des données
@@ -339,8 +340,83 @@ or_brut <- exp(coef(modele_bmi_brut)["bmi"])
 ```
 
 Le coefficient du BMI reste non significatif dans les deux versions du modèle (BMI écrêté : OR = `r round(or_wins, 2)` ; BMI brut : OR = `r round(or_brut, 2)`), et les coefficients des autres covariables ne sont pas modifiés de façon substantielle. Les résultats de l'analyse principale ne sont donc pas sensibles à la valeur extrême de BMI identifiée précédemment.
-## Spécification du modèle
 
+## Représentation graphique des résultats
+
+```{r}
+#| label: foret-modele-principal
+#| fig-cap: "Odds ratios ajustés (IC 95%) du modèle principal"
+#| fig-width: 7
+#| fig-height: 6
+
+etiquettes <- c(
+  age                        = "Âge",
+  genderMale                 = "Sexe : Homme",
+  hypertensionOui            = "Hypertension",
+  heart_diseaseOui           = "Maladie cardiaque",
+  ever_marriedYes            = "Déjà marié(e)",
+  work_typePrivate           = "Emploi : Privé",
+  `work_typeSelf-employed`   = "Emploi : Indépendant",
+  Residence_typeUrban        = "Résidence : Urbaine",
+  avg_glucose_level          = "Glycémie moyenne",
+  bmi_wins                   = "IMC (écrêté)",
+  `smoking_statusnever smoked` = "Tabac : jamais fumé",
+  smoking_statussmokes       = "Tabac : fumeur actuel",
+  smoking_statusUnknown      = "Tabac : inconnu"
+)
+
+resultats_modele <- tidy(modele_principal, exponentiate = TRUE, conf.int = TRUE) |>
+  filter(term != "(Intercept)") |>
+  mutate(term = recode(term, !!!etiquettes))
+
+ggplot(resultats_modele, aes(x = estimate, y = fct_reorder(term, estimate))) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(xmin = conf.low, xmax = conf.high)) +
+  scale_x_log10() +
+  labs(
+    x = "Odds ratio (échelle log)",
+    y = NULL,
+    title = "Facteurs associés à l'AVC (modèle ajusté)"
+  ) +
+  theme_minimal()
+```
+
+## Structure causale hypothétique (DAG)
+
+Le graphe ci-dessous représente la structure de relations formulée a priori dans les hypothèses (section « Hypothèses et prédictions »), avant l'analyse des données. Il ne s'agit pas d'une structure confirmée, mais d'une représentation graphique du raisonnement ayant guidé le choix des variables d'ajustement, centré sur l'âge comme facteur de confusion principal.
+
+```{r}
+#| label: dag-hypotheses
+#| fig-cap: "Structure causale hypothétique guidant l'analyse"
+#| fig-width: 8
+#| fig-height: 6
+
+dag_avc <- dagify(
+  stroke ~ age + hypertension + heart_disease + avg_glucose_level + bmi + smoking + gender,
+  hypertension ~ age,
+  heart_disease ~ age,
+  ever_married ~ age,
+  work_type ~ age,
+  smoking ~ gender,
+  exposure = "age",
+  outcome = "stroke",
+  labels = c(
+    stroke             = "AVC",
+    age                = "Âge",
+    gender             = "Sexe",
+    hypertension       = "Hypertension",
+    heart_disease      = "Maladie\ncardiaque",
+    avg_glucose_level  = "Glycémie",
+    bmi                = "IMC",
+    smoking            = "Tabac",
+    ever_married       = "Statut\nmarital",
+    work_type          = "Type\nd'emploi"
+  )
+)
+
+ggdag(dag_avc, text = FALSE, use_labels = "label") +
+  theme_dag()
+```
 ## Vérification des hypothèses
 
 ## Résultats
@@ -349,7 +425,6 @@ Le coefficient du BMI reste non significatif dans les deux versions du modèle (
 
 ## Forest plot des odds ratios ajustés
 
-# Analyses de sensibilité et diagnostics
 
 ## Principaux résultats
 
